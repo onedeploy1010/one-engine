@@ -2,6 +2,7 @@
 const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['thirdweb', 'ccxt', 'pino'],
+    instrumentationHook: true,
   },
   async headers() {
     return [
