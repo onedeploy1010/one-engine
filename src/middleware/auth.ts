@@ -26,6 +26,7 @@ export async function authenticate(req: NextRequest): Promise<AuthContext | null
 
   const token = authHeader.substring(7);
 
+  // Try ONE Engine JWT first
   try {
     const { payload } = await jwtVerify(token, getJwtSecret());
     const tokenPayload = payload as unknown as AuthTokenPayload;
@@ -38,8 +39,30 @@ export async function authenticate(req: NextRequest): Promise<AuthContext | null
       role: tokenPayload.role,
       accessToken: token,
     };
+  } catch {
+    // Engine JWT failed, try Supabase token fallback
+  }
+
+  // Fallback: validate as Supabase session token
+  try {
+    const supabase = getSupabaseAdmin();
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+
+    if (error || !user) {
+      logger.warn('Auth failed: neither Engine JWT nor Supabase token valid');
+      return null;
+    }
+
+    return {
+      userId: user.id,
+      email: user.email || '',
+      walletAddress: (user.user_metadata?.wallet_address as string) || '',
+      projectId: undefined,
+      role: (user.user_metadata?.role as UserRole) || 'user',
+      accessToken: token,
+    };
   } catch (error) {
-    logger.warn('Invalid token');
+    logger.warn('Supabase token validation failed', { error });
     return null;
   }
 }
