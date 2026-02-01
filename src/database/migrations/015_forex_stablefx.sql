@@ -162,6 +162,21 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
+-- ── RPC: Atomic Pool Size Increment ──────────────────────────────────────
+
+CREATE OR REPLACE FUNCTION increment_pool_size(
+  p_pool_type forex_pool_type,
+  p_amount    DECIMAL
+)
+RETURNS void AS $$
+BEGIN
+  UPDATE forex_pools
+  SET total_size = total_size + p_amount,
+      updated_at = now()
+  WHERE pool_type = p_pool_type;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- ── RLS Policies ───────────────────────────────────────────────────────────
 
 ALTER TABLE forex_investments ENABLE ROW LEVEL SECURITY;
