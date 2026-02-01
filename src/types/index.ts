@@ -63,7 +63,6 @@ export interface ProjectSettings {
     payments: boolean;
     quant: boolean;
     ai: boolean;        // AI Agent Trading
-    forex: boolean;     // StableFX Forex Trading
     x402: boolean;      // X402 Payment Protocol
   };
 }
@@ -477,19 +476,3 @@ export interface GrowthStats {
   usersLast7Days: number[];
   transactionsLast7Days: number[];
 }
-
-// ============ Re-export Forex Types ============
-
-export type {
-  ForexCurrencyPair,
-  ForexCycleOption,
-  ForexPoolType,
-  ForexPool,
-  ForexInvestmentStatus,
-  ForexInvestment,
-  CreateForexInvestmentParams,
-  ForexTradeStatus,
-  ForexTrade,
-  ForexModuleStats,
-  ForexPortfolioSummary,
-} from './forex';

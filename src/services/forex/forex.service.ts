@@ -411,18 +411,25 @@ export class ForexService {
 
     for (const [poolType, alloc] of Object.entries(allocations)) {
       const increment = newAmount * alloc;
-      await db().rpc('increment_pool_size', {
-        p_pool_type: poolType,
-        p_amount: increment,
-      }).catch(() => {
-        // Fallback: direct update
-        db()
+      try {
+        await db().rpc('increment_pool_size', {
+          p_pool_type: poolType,
+          p_amount: increment,
+        });
+      } catch {
+        log.warn(`RPC increment_pool_size failed for ${poolType}, using direct update`);
+        const { data: pool } = await db()
           .from('forex_pools')
-          .update({
-            total_size: db().raw(`total_size + ${increment}`),
-          })
-          .eq('pool_type', poolType);
-      });
+          .select('total_size')
+          .eq('pool_type', poolType)
+          .single();
+        if (pool) {
+          await db()
+            .from('forex_pools')
+            .update({ total_size: pool.total_size + increment })
+            .eq('pool_type', poolType);
+        }
+      }
     }
   }
 

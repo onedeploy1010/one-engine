@@ -26,7 +26,6 @@ export async function authenticate(req: NextRequest): Promise<AuthContext | null
 
   const token = authHeader.substring(7);
 
-  // 1. Try ONE Engine JWT first
   try {
     const { payload } = await jwtVerify(token, getJwtSecret());
     const tokenPayload = payload as unknown as AuthTokenPayload;
@@ -39,31 +38,10 @@ export async function authenticate(req: NextRequest): Promise<AuthContext | null
       role: tokenPayload.role,
       accessToken: token,
     };
-  } catch {
-    // JWT verification failed, try Supabase token below
+  } catch (error) {
+    logger.warn('Invalid token');
+    return null;
   }
-
-  // 2. Fallback: verify as Supabase session token
-  try {
-    const supabase = getSupabaseAdmin();
-    const { data: { user }, error: supaError } = await supabase.auth.getUser(token);
-
-    if (user && !supaError) {
-      return {
-        userId: user.id,
-        email: user.email || '',
-        walletAddress: user.user_metadata?.wallet_address || '',
-        projectId: undefined,
-        role: (user.user_metadata?.role as UserRole) || 'user',
-        accessToken: token,
-      };
-    }
-  } catch {
-    // Supabase verification also failed
-  }
-
-  logger.warn('Invalid token - both JWT and Supabase verification failed');
-  return null;
 }
 
 /**

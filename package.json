@@ -11,6 +11,8 @@
     "type-check": "tsc --noEmit",
     "db:generate": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/database/types.ts",
     "db:migrate": "supabase db push",
+    "db:setup": "npx ts-node scripts/setup-wallet-project.ts",
+    "db:verify": "npx ts-node scripts/verify-database.ts",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",

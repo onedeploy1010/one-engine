@@ -211,3 +211,15 @@ DO $$ BEGIN
     USING (TRUE);
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
+
+-- ── RPC Functions ────────────────────────────────────────────────────────
+
+CREATE OR REPLACE FUNCTION increment_pool_size(p_pool_type forex_pool_type, p_amount DECIMAL)
+RETURNS void AS $$
+BEGIN
+  UPDATE forex_pools
+  SET total_size = total_size + p_amount,
+      updated_at = now()
+  WHERE pool_type = p_pool_type;
+END;
+$$ LANGUAGE plpgsql;
